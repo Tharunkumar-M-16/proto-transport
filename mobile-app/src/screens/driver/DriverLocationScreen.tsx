@@ -18,14 +18,14 @@ export default function DriverLocationScreen() {
 
   const markNextStop = async () => {
     if (!bus) return;
-    const nextIndex = bus.currentStopIndex + 1;
-    if (nextIndex >= bus.stops.length) return alert('Already at last stop');
+    const isFinished = bus.currentStopIndex >= bus.stops.length - 1;
+    const nextIndex = isFinished ? 0 : bus.currentStopIndex + 1;
 
     setUpdating(true);
     try {
       await updateBusLocation(selectedBusId, bus.stops[nextIndex]);
       loadBus();
-    } catch (err: any) {
+    } catch {
       alert('Update failed — check WiFi. Use SMS fallback if offline.');
     } finally {
       setUpdating(false);
@@ -34,13 +34,15 @@ export default function DriverLocationScreen() {
 
   if (!bus) return <ActivityIndicator style={{ flex: 1 }} />;
 
+  const isFinished = bus.currentStopIndex >= bus.stops.length - 1;
+
   return (
     <View style={styles.container}>
       <Text style={styles.busId}>{bus.busId}</Text>
       <Text style={styles.currentStop}>Current: {bus.currentStop}</Text>
       <TouchableOpacity style={styles.button} onPress={markNextStop} disabled={updating}>
         <Text style={styles.buttonText}>
-          {updating ? 'Updating...' : 'Mark Next Stop Reached'}
+          {updating ? 'Updating...' : isFinished ? 'Restart Route Loop' : 'Mark Next Stop Reached'}
         </Text>
       </TouchableOpacity>
       <Text style={styles.hint}>

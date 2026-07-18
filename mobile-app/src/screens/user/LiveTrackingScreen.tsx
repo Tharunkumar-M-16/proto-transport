@@ -14,16 +14,27 @@ export default function LiveTrackingScreen() {
     const socket = getSocket();
     socket.emit('trackBus', selectedBusId);
 
-    socket.on('locationUpdate', (data) => {
-      if (data.busId === selectedBusId) {
-        setBusData((prev: any) => ({ ...prev, ...data }));
+    const handler = (data: any) => {
+      if (data && data.busId === selectedBusId) {
+        setBusData((prev: any) => {
+          if (!prev) return data;
+          return { ...prev, ...data };
+        });
       }
-    });
+    };
+
+    socket.on('locationUpdate', handler);
 
     return () => {
-      socket.off('locationUpdate');
+      socket.off('locationUpdate', handler);
     };
   }, [selectedBusId]);
+
+  const formatTime = (dateStr: any) => {
+    if (!dateStr) return 'N/A';
+    const date = new Date(dateStr);
+    return isNaN(date.getTime()) ? 'N/A' : date.toLocaleTimeString();
+  };
 
   if (!busData) return <Text style={styles.loading}>Loading...</Text>;
 
@@ -35,7 +46,7 @@ export default function LiveTrackingScreen() {
         <Text style={styles.label}>Current Stop</Text>
         <Text style={styles.stop}>{busData.currentStop}</Text>
         <Text style={styles.meta}>
-          Updated via {busData.updatedVia} • {new Date(busData.lastUpdated).toLocaleTimeString()}
+          Updated via {busData.updatedVia} • {formatTime(busData.lastUpdated)}
         </Text>
       </View>
     </View>
