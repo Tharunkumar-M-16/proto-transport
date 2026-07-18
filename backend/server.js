@@ -16,6 +16,7 @@ connectDB();
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
